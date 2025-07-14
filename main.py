@@ -4,11 +4,11 @@ import chess.pgn
 # --- IMPORT YOUR BOTS HERE ---
 from dumbot import random_bot_move
 from alpha_beta import alpha_beta_bot_move
-
+from monte_carlo import monte_carlo_bot_move
 # Assign which function is the engine for each side
 # Use None for human player
-bot_white = random_bot_move     
-bot_black = alpha_beta_bot_move                
+bot_white = alpha_beta_bot_move     
+bot_black = None                
 
 def get_move_from(engine, board):
     """Get move either from bot engine or human input."""

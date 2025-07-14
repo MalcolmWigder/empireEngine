@@ -6,11 +6,12 @@ def alpha_beta_search(board, depth, alpha, beta, maximizing_player):
     
     if depth == 0 or board.is_game_over():
         if board.is_checkmate():
-            # If it's checkmate and it's our move, it's bad (we got mated)
-            # If it's checkmate and it's their move, it's good (we mated them)
-            return (
-                -math.inf if board.turn == maximizing_player else math.inf
-            ), None
+            # If it's maximizing player's move and it's mate, that's bad for maximizing player
+            # (because they have no legal moves)
+            if board.turn == maximizing_player:
+                return math.inf + depth, None
+            else:
+                return -math.inf - depth, None
         elif board.is_stalemate() or board.is_insufficient_material() or board.can_claim_draw():
             return 0, None
         return evaluate(board), None
