@@ -1,14 +1,18 @@
 import chess
 import chess.pgn
-
+board = chess.Board()
 # --- IMPORT YOUR BOTS HERE ---
-from dumbot import random_bot_move
-from alpha_beta import alpha_beta_bot_move
-from monte_carlo import monte_carlo_bot_move
-# Assign which function is the engine for each side
-# Use None for human player
-bot_white = alpha_beta_bot_move     
-bot_black = None                
+from evals.agressor_eval import evaluate as aggressive_evaluate
+from evals.base_evaluation import evaluate as base_evaluate
+from engines.alpha_beta import alpha_beta_bot_move
+
+# aggressive:
+bot_white = lambda b: alpha_beta_bot_move(b, depth=3, evaluate_func=aggressive_evaluate)
+
+# regular:
+bot_black = lambda b: alpha_beta_bot_move(b, depth=2, evaluate_func=base_evaluate)
+
+            
 
 def get_move_from(engine, board):
     """Get move either from bot engine or human input."""

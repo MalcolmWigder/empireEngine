@@ -21,19 +21,44 @@ def king_safety(board):
     score = 0
     for color in [chess.WHITE, chess.BLACK]:
         king_square = board.king(color)
+        if king_square is None:
+            continue  # should not happen, but just in case
+        file = chess.square_file(king_square)
+        rank = chess.square_rank(king_square)
         has_castled = (king_square in [chess.G1, chess.C1] if color == chess.WHITE else king_square in [chess.G8, chess.C8])
+        on_home_rank = (rank == 0 if color == chess.WHITE else rank == 7)
+        in_center = file in [3, 4]  # d/e files
         endgame = sum(len(board.pieces(t, color)) for t in [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]) <= 2
-        # Penalize uncastled king
-        if not has_castled and not endgame:
-            if (color == chess.WHITE and king_square == chess.E1) or (color == chess.BLACK and king_square == chess.E8):
-                score -= 50 if color == chess.WHITE else -50
-        # Bonus for castled king
+
+        # Strongly penalize king NOT castled and still on first rank but not in castling spot
+        if not has_castled and on_home_rank and king_square not in ([chess.E1, chess.G1, chess.C1] if color == chess.WHITE else [chess.E8, chess.G8, chess.C8]) and not endgame:
+            score -= 200 if color == chess.WHITE else -200
+
+        # Moderate penalty for king off home rank before endgame (i.e. Kd2, Ke2, etc.)
+        if not has_castled and not on_home_rank and not endgame:
+            score -= 100 if color == chess.WHITE else -100
+
+        # Small penalty for king still on e1/e8 and uncastled
+        if not has_castled and (king_square == (chess.E1 if color == chess.WHITE else chess.E8)) and not endgame:
+            score -= 60 if color == chess.WHITE else -60
+
+        # Big bonus for castling before endgame
         if has_castled and not endgame:
-            score += 30 if color == chess.WHITE else -30
-        # Penalize king in center in endgame
-        if endgame and chess.square_file(king_square) in [3, 4] and chess.square_rank(king_square) in [3, 4]:
-            score += 20 if color == chess.WHITE else -20
+            score += 100 if color == chess.WHITE else -100
+
+        # Opposite-side castling Empire bonus
+        white_king = board.king(chess.WHITE)
+        black_king = board.king(chess.BLACK)
+        if white_king in [chess.C1] and black_king in [chess.G8]:
+            score += 200 if color == chess.WHITE else -200
+        if white_king in [chess.G1] and black_king in [chess.C8]:
+            score += 200 if color == chess.WHITE else -200
+
+        # Encourage king centralization in endgame
+        if endgame and in_center and (rank in [3, 4]):
+            score += 40 if color == chess.WHITE else -40
     return score
+
 
 def piece_activity(board):
     score = 0
@@ -125,9 +150,8 @@ def king_attack(board):
     return score
 
 def mate_score(board):
-    """Huge bonus/penalty for mate (in case search stops at mate)."""
+    
     if board.is_checkmate():
-        # The side to move is checkmated, so the previous player wins
         return 10000 if board.turn == chess.BLACK else -10000
     return 0
 
@@ -138,5 +162,5 @@ def evaluate(board):
         + piece_activity(board)
         + pawn_structure(board)
         + king_attack(board)
-        + mate_score(board)
+        
     )
